@@ -1,13 +1,26 @@
 require "wms/version"
 
 module Wms
-  puts "Loading WMS..."
-  module Input;  end
-  module Config; end
-  module Plugin; end
-  module Widget; end
-  module Api; end 
-end
+  module Config
+    autoload :Mixin, 'wms/config/mixin'
+  end
 
-require 'wms/config/mixin'
-require 'wms/input/base'
+  module Input
+    autoload :Base, 'wms/input/base'
+    autoload :AndroidSensor, 'wms/input/android_sensor'
+    autoload :AndroidWifiLocation, 'wms/input/android_wifilocation'
+  end
+
+  module Plugin
+    autoload :Plugin, 'wms/plugin/plugin'
+  end
+  
+  module Widget 
+    autoload :Base, 'wms/widget/base'
+  end
+
+  module Api
+    autoload :Event, 'wms/api/event'
+    autoload :Analytic, 'wms/api/analytic'
+  end 
+end

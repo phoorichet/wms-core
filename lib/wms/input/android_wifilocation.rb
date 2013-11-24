@@ -1,4 +1,3 @@
-require 'wms/namespace'
 require 'wms/input/base'
 require 'wms/config/mixin'
 require 'csv'
