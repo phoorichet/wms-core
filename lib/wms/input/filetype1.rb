@@ -26,19 +26,66 @@ class Wms::Input::Filetype1 < Wms::Input::Base
     # adding options to make data manipulation easy
     total_lines = 0
     str_arr = []
+    callback = block
     if @is_gz
       Zlib::GzipReader.open(@filepath) do |csv|
         csv.read.each_line do |line|
-          str_arr = []
-          str_arr << '['
-          str_arr << line
-          str_arr << ']'
-          joined_str = str_arr.join("")
-          json_obj = JSON.parse(joined_str)
+          splits    = line.split(',')
+          type      = splits[0]
+          timestr   = splits[1]
+          timestamp = Time.at(splits[2].to_i / 1000.0, splits[2].to_i % 1000.0)
+          device_id = splits[3]
+          
+          data = Hash.new
+          data[:type] = type
+          data[:timestamp] = timestamp
+          data[:device_id] = device_id
 
-          norm_json = normlaize_json_obj(json_obj)
-          callback = block
-          callback.call(norm_json)
+          case type
+          when "wifi_accesspoint_info"
+            joined      = splits[4..splits.size].join(',')
+            jsoned      = JSON.parse(joined)
+            data[:list] = jsoned['list']
+            callback.call(data)
+          when "location"
+            (4..splits.size-1).step(2).each  do |i| 
+                data[splits[i]] = cascading_convert(splits[i+1])
+                callback.call data
+            end
+          when "battery"
+            (4..splits.size-1).step(2).each  do |i| 
+                data[splits[i]] = cascading_convert(splits[i+1])
+                callback.call data
+            end 
+          when "application"
+            (4..splits.size-1).step(2).each  do |i| 
+                data[splits[i]] = cascading_convert(splits[i+1])
+                callback.call data
+            end
+
+          # when "wifiscan"
+
+          else
+            @logger.debug "Type #{type} is no supported!"
+          end
+
+          @logger.debug data
+
+
+          # str_arr = []
+          # str_arr << '['
+          # str_arr << line
+          # str_arr << ']'
+
+          # joined_str = str_arr.join("")
+          # @logger.debug "  ==> #{joined_str}"
+          # 
+          # json_obj = JSON.parse(joined_str)
+
+          # @logger.debug "  --> #{json_obj}"
+          # norm_json = normlaize_json_obj(json_obj)
+          # callback = block
+          # callback.call(norm_json)
           # @logger.debug ">>>>>>#{norm_json}"
 
           total_lines += 1
@@ -54,7 +101,7 @@ class Wms::Input::Filetype1 < Wms::Input::Base
         str_arr << ']'
         joined_str = str_arr.join("")
         json_obj = JSON.parse(joined_str)
-        @logger.debug "  ==> #{json_obj}"
+
 
         # norm_json = normlaize_json_obj(json_obj)
         # callback = block
@@ -67,6 +114,22 @@ class Wms::Input::Filetype1 < Wms::Input::Base
 
   end # end run(&block)
 
+  # Try to convert in order 
+  # Int > Float > String
+  private
+  def cascading_convert(value)
+    result = nil
+    begin
+      result = Integer(value)
+    rescue
+      begin
+        result = Float(value)
+      rescue
+        result = value
+      end
+    end
+    result
+  end
 
   #
   private
