@@ -1,6 +1,6 @@
 # Wms
 
-TODO: Write a gem description
+A core library for [WMS](https://github.com/phoorichet/wms).
 
 ## Installation
 
@@ -18,7 +18,7 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+This gem is included in WMS.
 
 ## Contributing
 
